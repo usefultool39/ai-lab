@@ -1,0 +1,25 @@
+{
+  "n_samples": 200,
+  "train_size": 150,
+  "test_size": 50,
+  "lr": 1.0,
+  "max_epochs": 100,
+  "epochs_ran": 2,
+  "n_updates": 1,
+  "final_errors": 0,
+  "errors_history": [
+    1,
+    0
+  ],
+  "w": [
+    1.6339696609912182,
+    2.127688727686696
+  ],
+  "b": 1.0,
+  "train_acc": 1.0,
+  "test_acc": 1.0,
+  "figures": [
+    "figures/decision_boundary.png",
+    "figures/convergence.png"
+  ]
+}

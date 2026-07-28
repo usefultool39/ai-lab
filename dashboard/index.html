@@ -1,0 +1,602 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 实验室 · 项目总览</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.8.0/build/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="data.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --ink: #1a202c;
+    --ink-2: #2d3748;
+    --ink-3: #4a5568;
+    --ink-4: #718096;
+    --ink-5: #a0aec0;
+    --brand: #667eea;
+    --brand-2: #764ba2;
+    --accent: #48bb78;
+    --accent-2: #38a169;
+}
+html { font-size: 16px; }
+body {
+    font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    color: var(--ink-2);
+    -webkit-font-smoothing: antialiased;
+}
+.glass-header {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    position: sticky; top: 0; z-index: 100;
+}
+.h-inner { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem; }
+.h-title { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.h-sub { color: #718096; font-size: 0.9rem; }
+.h-back { color: #667eea; text-decoration: none; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: none; }
+.h-back:hover { text-decoration: underline; }
+.stats-row { display: flex; gap: 1.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+.stat-card { background: linear-gradient(135deg, #f6f8ff, #fff); padding: 1.25rem 1.5rem; border-radius: 16px; min-width: 130px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.3s; }
+.stat-card:hover { transform: translateY(-3px); }
+.stat-value { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.stat-label { font-size: 0.85rem; color: #718096; font-weight: 500; }
+.main-container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem; }
+.card { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 1.75rem; border: 1px solid rgba(255,255,255,0.5); cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+.card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 60px rgba(102,126,234,0.3); }
+.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+.card-title { font-size: 1.2rem; font-weight: 600; }
+.card-count { font-size: 0.9rem; color: #a0aec0; font-weight: 500; }
+.pb-bg { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem; }
+.pb-fill { height: 100%; background: linear-gradient(90deg, #48bb78, #38a169); border-radius: 4px; transition: width 0.8s; }
+.pb-text { font-size: 0.8rem; color: #718096; text-align: right; }
+.task-dots { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem; }
+.dot { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600; transition: all 0.2s; }
+.dot.completed { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+.dot.pending { background: #e2e8f0; color: #a0aec0; }
+.dot:hover { transform: scale(1.2); }
+
+/* category page */
+.task-card { background: rgba(255,255,255,0.95); border-radius: 16px; padding: 1.5rem; cursor: pointer; transition: all 0.3s; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-left: 4px solid #cbd5e0; margin-bottom: 1rem; }
+.task-card.completed { border-left-color: #48bb78; }
+.task-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(102,126,234,0.25); }
+.t-id { font-size: 0.8rem; color: #667eea; font-weight: 600; letter-spacing: 0.5px; }
+.t-name { font-size: 1.2rem; font-weight: 600; margin: 0.3rem 0 0.15rem; }
+.t-en { font-size: 0.9rem; color: #718096; margin-bottom: 0.75rem; }
+.badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.badge { font-size: 0.75rem; padding: 0.3rem 0.6rem; border-radius: 20px; font-weight: 500; }
+.badge.done { background: linear-gradient(135deg, #48bb78, #38a169); color: white; }
+.badge.todo { background: #e2e8f0; color: #718096; }
+.badge.notes { background: linear-gradient(135deg, #4299e1, #3182ce); color: white; }
+.badge.figures { background: linear-gradient(135deg, #9f7aea, #805ad5); color: white; }
+
+/* task page */
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.tab { padding: 0.7rem 1.2rem; background: rgba(255,255,255,0.9); border: none; color: #718096; border-radius: 12px; cursor: pointer; font-weight: 500; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.tab.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+.tab:hover:not(.active) { background: white; color: #667eea; }
+.content-box { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 2rem; min-height: 500px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.markdown { font-size: 0.95rem; color: var(--ink-3); line-height: 1.85; }
+.markdown h1,.markdown h2,.markdown h3,.markdown h4,.markdown h5,.markdown h6 {
+    margin: 1.75rem 0 0.85rem; color: var(--ink); font-weight: 600;
+    font-family: 'Inter', 'Noto Sans SC', sans-serif; line-height: 1.35;
+}
+.markdown h1 { font-size: 1.55rem; border-bottom: 2px solid #edf2f7; padding-bottom: 0.5rem; }
+.markdown h2 { font-size: 1.3rem; color: var(--brand); padding-left: 0.85rem; border-left: 4px solid var(--brand); background: linear-gradient(90deg, rgba(102,126,234,0.06), transparent); padding-top: 0.25rem; padding-bottom: 0.25rem; border-radius: 0 6px 6px 0; }
+.markdown h3 { font-size: 1.1rem; color: var(--ink); }
+.markdown h4 { font-size: 1rem; color: var(--ink-2); }
+.markdown p { margin: 0.95rem 0; color: var(--ink-3); line-height: 1.95; }
+.markdown strong { color: var(--ink); font-weight: 600; }
+.markdown em { color: var(--ink-2); font-style: italic; }
+.markdown ul,.markdown ol { margin: 0.95rem 0 0.95rem 1.6rem; padding-left: 0.5rem; }
+.markdown li { margin: 0.35rem 0; line-height: 1.85; }
+.markdown li::marker { color: var(--brand); }
+.markdown blockquote { margin: 1.1rem 0; padding: 0.7rem 1rem; border-left: 4px solid var(--brand); background: linear-gradient(90deg, rgba(102,126,234,0.07), transparent); color: var(--ink-3); border-radius: 0 8px 8px 0; }
+.markdown blockquote p { margin: 0.3rem 0; }
+.markdown hr { border: none; border-top: 1px dashed #cbd5e0; margin: 1.6rem 0; }
+/* inline code: less aggressive than bright red */
+.markdown code { background: #eef2ff; padding: 0.15rem 0.45rem; border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 0.85em; color: #4c51bf; word-break: break-word; border: 1px solid #e0e7ff; }
+.markdown pre { background: #282c34; padding: 1.1rem 1.25rem; border-radius: 12px; overflow-x: auto; margin: 1.1rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.12); position: relative; }
+.markdown pre code { background: none; padding: 0; color: #d7dae0; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 0.9rem; line-height: 1.7; border: none; word-break: normal; }
+/* tables: scroll horizontally if too wide */
+.markdown .table-wrap { margin: 1rem 0; border-radius: 12px; border: 1px solid #e2e8f0; overflow-x: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.markdown table { width: 100%; border-collapse: collapse; margin: 0; min-width: 360px; }
+.markdown th,.markdown td { border: 1px solid #e2e8f0; padding: 0.7rem 0.95rem; text-align: left; vertical-align: top; }
+.markdown th { background: #f7fafc; font-weight: 600; color: var(--ink); white-space: nowrap; }
+.markdown tr:nth-child(even) td { background: #fafbff; }
+.markdown td { color: var(--ink-3); }
+/* click-to-zoom images */
+.markdown img { max-width: 100%; border-radius: 12px; margin: 1rem 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); cursor: zoom-in; transition: transform 0.2s; }
+.markdown img:hover { transform: scale(1.01); }
+/* KaTeX formula styling — pronounced academic theme */
+.markdown .katex { font-size: 1.08em; color: var(--ink); }
+.markdown p:has(.katex-display) {
+    margin: 0;
+    padding: 0;
+}
+.markdown .katex-display {
+    margin: 1.5rem 0;
+    padding: 0.6rem 1.2rem;
+    background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 100%);
+    border-radius: 10px;
+    border-left: 5px solid var(--brand);
+    box-shadow: 0 4px 12px rgba(102,126,234,0.12);
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-align: center;
+}
+.markdown .katex-display > .katex { white-space: normal; }
+.markdown .katex-display .katex-html { display: block; }
+/* copy button on code blocks */
+.code-block-wrap { position: relative; margin: 1rem 0; }
+.code-block-wrap > pre { margin: 0; }
+.code-copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(255,255,255,0.08); color: #abb2bf; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; opacity: 0; transition: opacity 0.2s; font-family: inherit; }
+.code-block-wrap:hover .code-copy-btn, .code-copy-btn:focus { opacity: 1; }
+.code-copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+.code-copy-btn.copied { background: #48bb78; color: white; border-color: #48bb78; opacity: 1; }
+/* lightbox */
+.lightbox { position: fixed; inset: 0; background: rgba(15,20,35,0.92); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 2rem; cursor: zoom-out; }
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 96vw; max-height: 96vh; border-radius: 12px; box-shadow: 0 20px 80px rgba(0,0,0,0.6); cursor: zoom-out; }
+.file-list { display: grid; gap: 0.75rem; }
+.file-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: #f7fafc; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+.file-item:hover { background: #edf2f7; transform: translateX(4px); }
+.file-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.2rem; color: white; }
+.file-icon.py { background: linear-gradient(135deg, #306998, #ffd43b); }
+.file-icon.md { background: linear-gradient(135deg, #083fa1, #5194f0); }
+.file-icon.ipynb { background: linear-gradient(135deg, #f37726, #f9ab00); }
+.file-icon.png { background: linear-gradient(135deg, #8b5cf6, #ec4899); }
+.file-info { flex: 1; }
+.file-name { font-weight: 600; }
+.file-type { font-size: 0.8rem; color: #718096; }
+.empty { text-align: center; padding: 3rem; color: #a0aec0; }
+.loader { width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 4rem auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="glass-header">
+    <div class="h-inner">
+        <a class="h-back" id="btnBack" onclick="goBack()">← 返回</a>
+        <h1 class="h-title" id="hTitle">🧪 AI + Robotics 经典方法复现计划</h1>
+        <p class="h-sub" id="hSub">从 1950s 到 2026，系统复现 132 项经典算法</p>
+        <div class="stats-row" id="statsArea"></div>
+    </div>
+</div>
+
+<!-- BODY -->
+<div class="main-container" id="viewArea"></div>
+
+<script>
+const D = window.__DATA__;
+if (!D) { document.getElementById('viewArea').innerHTML = '<div class="empty" style="margin-top:4rem"><h2>⚠️ 数据未加载</h2><p>请先运行 generate.py 生成 data.js</p></div>'; throw new Error('no data'); }
+
+marked.setOptions({ breaks: true });
+
+// ============ ROUTING ============
+function route() {
+    const hash = location.hash || '#home';
+    if (hash === '#home') renderHome();
+    else if (hash.startsWith('#cat-')) renderCategory(hash.slice(5));
+    else if (hash.startsWith('#task-')) {
+        const parts = hash.slice(6).split('---');
+        renderTask(parts[0], parts[1]);
+    }
+}
+
+window.onhashchange = route;
+
+// ============ HOME ============
+function renderHome() {
+    document.getElementById('btnBack').style.display = 'none';
+    document.getElementById('hTitle').textContent = '🧪 AI + Robotics 经典方法复现计划';
+    document.getElementById('hSub').textContent = '从 1950s 到 2026，系统复现 132 项经典算法';
+
+    const stats = D.stats;
+    document.getElementById('statsArea').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${stats.total}</div><div class="stat-label">总任务数</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.completed}</div><div class="stat-label">已完成</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.progress}%</div><div class="stat-label">总进度</div></div>
+    `;
+
+    let html = '';
+    D.categories.forEach(cat => {
+        const done = cat.tasks.filter(t => t.status === '完成').length;
+        const pct = cat.expected_count ? Math.round(done / cat.expected_count * 100) : 0;
+        let dots = cat.tasks.slice(0, 10).map(t =>
+            `<span class="dot ${t.status==='完成'?'completed':'pending'}">${t.id.slice(1)}</span>`
+        ).join('');
+        if (cat.tasks.length > 10) dots += `<span class="dot pending">+${cat.tasks.length-10}</span>`;
+
+        html += `
+        <div class="card" onclick="location.hash='#cat-${cat.id}'">
+            <div class="card-top"><span class="card-title">${cat.name}</span><span class="card-count">${done} / ${cat.expected_count}</span></div>
+            <div class="pb-bg"><div class="pb-fill" style="width:${pct}%"></div></div>
+            <div class="pb-text">${pct}% 完成</div>
+            <div class="task-dots">${dots}</div>
+        </div>`;
+    });
+    document.getElementById('viewArea').innerHTML = `<div class="grid">${html}</div>`;
+}
+
+// ============ CATEGORY ============
+function renderCategory(catId) {
+    const cat = D.categories.find(c => c.id === catId);
+    if (!cat) { renderHome(); return; }
+
+    document.getElementById('btnBack').style.display = 'inline';
+    document.getElementById('hTitle').textContent = cat.name;
+    document.getElementById('hSub').textContent = `${cat.actual_count} 个任务 · ${cat.tasks.filter(t=>t.status==='完成').length} 已完成`;
+    document.getElementById('statsArea').innerHTML = '';
+
+    let html = '';
+    cat.tasks.forEach(task => {
+        let badges = `<span class="badge ${task.status==='完成'?'done':'todo'}">${task.status||'未开始'}</span>`;
+        if (task.has_notes) badges += '<span class="badge notes">📝 笔记</span>';
+        if (task.has_figures) badges += '<span class="badge figures">📊 图表</span>';
+
+        html += `
+        <div class="task-card ${task.status==='完成'?'completed':''}" onclick="location.hash='#task-${cat.id}---${task.id}'">
+            <div class="t-id">${task.id}</div>
+            <div class="t-name">${task.name}</div>
+            <div class="t-en">${task.en}</div>
+            <div class="badges">${badges}</div>
+        </div>`;
+    });
+    document.getElementById('viewArea').innerHTML = html;
+}
+
+// ============ TASK ============
+let _currentTask = null;
+
+function renderTask(catId, taskId) {
+    const cat = D.categories.find(c => c.id === catId);
+    if (!cat) { renderHome(); return; }
+    const task = cat.tasks.find(t => t.id === taskId);
+    if (!task) { renderHome(); return; }
+    _currentTask = task;
+
+    document.getElementById('btnBack').style.display = 'inline';
+    document.getElementById('hTitle').textContent = `${task.id} · ${task.name}`;
+    document.getElementById('hSub').textContent = task.en || '';
+    document.getElementById('statsArea').innerHTML = '';
+
+    const hasFigs = task.has_figures || (task.files || []).some(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
+    document.getElementById('viewArea').innerHTML = `
+        <div class="tabs">
+            <button class="tab active" onclick="switchTaskTab('readme')">📄 README</button>
+            <button class="tab" onclick="switchTaskTab('files')">📂 代码文件</button>
+            ${task.has_notes ? '<button class="tab" onclick="switchTaskTab(\'notes\')">📝 学习笔记</button>' : ''}
+            ${hasFigs ? '<button class="tab" onclick="switchTaskTab(\'figures\')">📊 图表</button>' : ''}
+        </div>
+        <div class="content-box" id="taskContent"></div>
+    `;
+    switchTaskTab('readme');
+}
+
+// ============ MARKDOWN RENDERER WITH MATH ============
+// Pre-processes LaTeX formulas before marked.parse so that display math
+// ($$...$$, \[...\]) never ends up inside <p>, avoiding browser auto-fix
+// that breaks layout. Inline math ($...$, \(...\)) is also handled.
+function renderMarkdownWithMath(mdText) {
+    if (!mdText) return '';
+    // 1. Protect code blocks and inline code from regex interference
+    const codeBlocks = [];
+    let protected = mdText.replace(/(```[\s\S]*?```)/g, (match) => {
+        const id = codeBlocks.length;
+        codeBlocks.push(match);
+        return `__CODEBLOCK_${id}__`;
+    });
+    const inlineCodes = [];
+    protected = protected.replace(/(`[^`\n]+`)/g, (match) => {
+        const id = inlineCodes.length;
+        inlineCodes.push(match);
+        return `__INLINECODE_${id}__`;
+    });
+    // 2. Extract display math ($$...$$ and \[...\])
+    const displayMaths = [];
+    protected = protected.replace(/\$\$([\s\S]*?)\$\$/g, (match, tex) => {
+        const id = displayMaths.length;
+        displayMaths.push(tex.trim());
+        return `<span class="math-disp" data-id="${id}"></span>`;
+    });
+    protected = protected.replace(/\\\[([\s\S]*?)\\\]/g, (match, tex) => {
+        const id = displayMaths.length;
+        displayMaths.push(tex.trim());
+        return `<span class="math-disp" data-id="${id}"></span>`;
+    });
+    // 3. Extract inline math ($...$ and \(...\))
+    const inlineMaths = [];
+    protected = protected.replace(/\\\(([\s\S]*?)\\\)/g, (match, tex) => {
+        const id = inlineMaths.length;
+        inlineMaths.push(tex.trim());
+        return `<span class="math-inline" data-id="${id}"></span>`;
+    });
+    protected = protected.replace(/(?<!\$)\$([^\$\n]+?)\$(?!\$)/g, (match, tex) => {
+        const id = inlineMaths.length;
+        inlineMaths.push(tex.trim());
+        return `<span class="math-inline" data-id="${id}"></span>`;
+    });
+    // 4. Restore protected content
+    protected = protected.replace(/__INLINECODE_(\d+)__/g, (match, id) => inlineCodes[parseInt(id)]);
+    protected = protected.replace(/__CODEBLOCK_(\d+)__/g, (match, id) => codeBlocks[parseInt(id)]);
+    // 5. Parse markdown
+    let html = marked.parse(protected);
+    // 6. Process placeholders in DOM
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    temp.querySelectorAll('.math-disp').forEach(span => {
+        const id = parseInt(span.dataset.id);
+        const tex = displayMaths[id];
+        if (!tex) return;
+        try {
+            const katexHtml = katex.renderToString(tex, { throwOnError: false, displayMode: true });
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = katexHtml;
+            const el = wrapper.firstElementChild;
+            const parent = span.parentElement;
+            if (parent && parent.tagName === 'P' && parent.childNodes.length === 1) {
+                parent.replaceWith(el);
+            } else {
+                span.replaceWith(el);
+            }
+        } catch (e) {
+            span.textContent = '$$' + tex + '$$';
+        }
+    });
+    temp.querySelectorAll('.math-inline').forEach(span => {
+        const id = parseInt(span.dataset.id);
+        const tex = inlineMaths[id];
+        if (!tex) return;
+        try {
+            const katexHtml = katex.renderToString(tex, { throwOnError: false, displayMode: false });
+            const wrapper = document.createElement('span');
+            wrapper.innerHTML = katexHtml;
+            span.replaceWith(wrapper.firstElementChild);
+        } catch (e) {
+            span.textContent = '$' + tex + '$';
+        }
+    });
+    return temp.innerHTML;
+}
+
+// ============ MARKDOWN ENHANCEMENTS ============
+// Wrap tables in scrollable container, attach copy buttons to code blocks,
+// enable image lightbox. Math is handled by renderMarkdownWithMath().
+// Idempotent: safe to call multiple times on the same container.
+function enhanceMarkdown(scope) {
+    if (!scope) return;
+
+    // 1. Wrap tables in scroll container so wide tables don't break the layout
+    scope.querySelectorAll('table').forEach(t => {
+        if (t.parentElement && t.parentElement.classList.contains('table-wrap')) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'table-wrap';
+        t.parentNode.insertBefore(wrap, t);
+        wrap.appendChild(t);
+    });
+
+    // 2. Add "copy" button to every <pre> code block
+    scope.querySelectorAll('pre > code').forEach(codeEl => {
+        const pre = codeEl.parentElement;
+        if (!pre || pre.parentElement?.classList.contains('code-block-wrap')) return;
+        const wrap = document.createElement('div');
+        wrap.className = 'code-block-wrap';
+        pre.parentNode.insertBefore(wrap, pre);
+        wrap.appendChild(pre);
+        const btn = document.createElement('button');
+        btn.className = 'code-copy-btn';
+        btn.type = 'button';
+        btn.textContent = '复制';
+        btn.addEventListener('click', () => {
+            const text = codeEl.innerText;
+            const done = () => { btn.classList.add('copied'); btn.textContent = '已复制'; setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '复制'; }, 1600); };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+            } else {
+                fallbackCopy(text, done);
+            }
+        });
+        wrap.appendChild(btn);
+    });
+
+    // 3. Image click-to-zoom (lightbox)
+    scope.querySelectorAll('img').forEach(img => {
+        img.addEventListener('click', () => openLightbox(img.src, img.alt));
+    });
+
+    // Math rendering is now handled by renderMarkdownWithMath() before marked.parse
+}
+
+function fallbackCopy(text, cb) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        cb && cb();
+    } catch (e) { console.error('copy failed:', e); }
+}
+
+// Lightbox (single instance, lazy-installed)
+let _lightbox = null;
+function openLightbox(src, alt) {
+    if (!_lightbox) {
+        _lightbox = document.createElement('div');
+        _lightbox.className = 'lightbox';
+        _lightbox.innerHTML = '<img alt="" />';
+        _lightbox.addEventListener('click', () => _lightbox.classList.remove('open'));
+        document.body.appendChild(_lightbox);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') _lightbox && _lightbox.classList.remove('open');
+        });
+    }
+    const img = _lightbox.querySelector('img');
+    img.src = src; img.alt = alt || '';
+    _lightbox.classList.add('open');
+}
+
+function assetUrl(task, relName) {
+    // dashboard 在 /dashboard/，任务资源在仓库根目录
+    return '../' + task.path + '/' + relName.replace(/^\/+/, '');
+}
+
+function rewriteMdAssetUrls(rootEl, task) {
+    if (!rootEl || !task) return;
+    rootEl.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (!src || /^(https?:|data:|\/\/)/i.test(src)) return;
+        img.setAttribute('src', assetUrl(task, src));
+    });
+}
+
+function switchTaskTab(tabId) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(b => {
+        const label = b.textContent || '';
+        const map = {
+            readme: label.includes('README'),
+            files: label.includes('代码'),
+            notes: label.includes('笔记'),
+            figures: label.includes('图表'),
+        };
+        if (map[tabId]) b.classList.add('active');
+    });
+
+    const task = _currentTask;
+    const box = document.getElementById('taskContent');
+    if (!box || !task) return;
+
+    if (tabId === 'readme') {
+        if (task.content) {
+            box.innerHTML = '<div class="markdown">' + renderMarkdownWithMath(task.content) + '</div>';
+            rewriteMdAssetUrls(box, task);
+            enhanceMarkdown(box);
+            box.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+        } else {
+            box.innerHTML = '<div class="empty">📄 README.md 不存在</div>';
+        }
+    } else if (tabId === 'files') {
+        if (!task.files || task.files.length === 0) {
+            box.innerHTML = '<div class="empty">📂 暂无文件</div>';
+            return;
+        }
+        let html = '<div class="file-list">';
+        task.files.forEach(f => {
+            const icons = { py: '🐍', md: '📝', ipynb: '📓', png: '🖼️', json: '📋', txt: '📄' };
+            const safe = f.name.replace(/'/g, "\\'");
+            html += `
+            <div class="file-item" onclick="viewFile('${safe}')">
+                <div class="file-icon ${f.type}">${icons[f.type]||'📄'}</div>
+                <div class="file-info">
+                    <div class="file-name">${f.name}</div>
+                    <div class="file-type">${(f.type||'').toUpperCase()} · ${fmtSize(f.size)}</div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        box.innerHTML = html;
+    } else if (tabId === 'notes') {
+        const note = task.files.find(f => f.name.includes('学习笔记') && f.name.endsWith('.md'));
+        if (note && note.content) {
+            box.innerHTML = '<div class="markdown">' + renderMarkdownWithMath(note.content) + '</div>';
+            rewriteMdAssetUrls(box, task);
+            enhanceMarkdown(box);
+            box.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+        } else {
+            box.innerHTML = '<div class="empty">📝 暂无学习笔记</div>';
+        }
+    } else if (tabId === 'figures') {
+        const imgs = (task.files || []).filter(f => /\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name));
+        if (!imgs.length) {
+            box.innerHTML = '<div class="empty">📊 暂无图表</div>';
+            return;
+        }
+        box.innerHTML = imgs.map(f => `
+            <div style="margin-bottom:1.5rem">
+                <div style="font-weight:600;margin-bottom:0.5rem;color:#4a5568">${f.name}</div>
+                <img src="${assetUrl(task, f.name)}" alt="${f.name}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);cursor:zoom-in" />
+            </div>
+        `).join('');
+        enhanceMarkdown(box);
+    }
+}
+
+function viewFile(filename) {
+    const task = _currentTask;
+    const f = task.files.find(x => x.name === filename);
+    if (!f) return;
+    const box = document.getElementById('taskContent');
+    const back = `<p style="margin-bottom:1rem;color:#718096"><a href="#" onclick="switchTaskTab('files');return false;" style="color:#667eea">← 返回文件列表</a> · ${f.name}</p>`;
+
+    if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(f.name)) {
+        box.innerHTML = `${back}<img src="${assetUrl(task, f.name)}" alt="${f.name}" style="max-width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);cursor:zoom-in" />`;
+        enhanceMarkdown(box);
+        return;
+    }
+
+    if (f.type === 'md' && f.content) {
+        box.innerHTML = `${back}<div class="markdown">${renderMarkdownWithMath(f.content)}</div>`;
+        rewriteMdAssetUrls(box, task);
+        enhanceMarkdown(box);
+        box.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+    } else if (f.type === 'py' && f.content) {
+        box.innerHTML = `${back}<pre><code class="language-python">${esc(f.content)}</code></pre>`;
+        hljs.highlightAll();
+        enhanceMarkdown(box);
+    } else if (f.content) {
+        box.innerHTML = `${back}<pre style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;background:#282c34;color:#abb2bf;padding:1.25rem;border-radius:12px;overflow-x:auto">${esc(f.content)}</pre>`;
+    } else {
+        box.innerHTML = `${back}<div class="empty">📄 文件过大（>100KB）或为二进制，无法内嵌预览</div>`;
+    }
+}
+
+function goBack() {
+    const hash = location.hash;
+    if (hash.startsWith('#task-')) {
+        location.hash = '#cat-' + hash.slice(6).split('---')[0];
+    } else {
+        location.hash = '#home';
+    }
+}
+
+function fmtSize(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
+}
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+// boot
+route();
+</script>
+</body>
+</html>
+
+
+
+
+

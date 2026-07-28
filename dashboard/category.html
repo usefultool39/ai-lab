@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-top: 0.75rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+        }
+        .task-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #cbd5e0;
+        }
+        .task-card.completed {
+            border-left-color: #48bb78;
+        }
+        .task-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.25);
+        }
+        .task-id {
+            font-size: 0.8rem;
+            color: #667eea;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .task-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0.5rem 0 0.25rem;
+        }
+        .task-en {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 1rem;
+        }
+        .badges {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        .badge.done {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        .badge.todo {
+            background: #e2e8f0;
+            color: #718096;
+        }
+        .badge.notes {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+        }
+        .badge.figures {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-inner">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <h1 id="cat-title"></h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="grid" id="task-grid"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const catId = params.get('id');
+
+        fetch('data.json')
+            .then(r => r.json())
+            .then(data => {
+                const cat = data.categories.find(c => c.id === catId);
+                if (!cat) return;
+
+                document.getElementById('cat-title').textContent = cat.name;
+                const grid = document.getElementById('task-grid');
+
+                cat.tasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card ${task.status === '完成' ? 'completed' : ''}`;
+                    card.onclick = () => window.location.href = `task.html?path=${encodeURIComponent(task.path.replace(/\\/g, '/'))}`;
+
+                    let badges = `<span class="badge ${task.status === '完成' ? 'done' : 'todo'}">${task.status || '未开始'}</span>`;
+                    if (task.has_notes) badges += '<span class="badge notes">📝 笔记</span>';
+                    if (task.has_figures) badges += '<span class="badge figures">📊 图表</span>';
+
+                    card.innerHTML = `
+                        <div class="task-id">${task.id}</div>
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-en">${task.en}</div>
+                        <div class="badges">${badges}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
+    </script>
+</body>
+</html>

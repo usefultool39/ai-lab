@@ -1,0 +1,524 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.8.0/build/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            line-height: 1.7;
+            color: #2d3748;
+            -webkit-font-smoothing: antialiased;
+        }
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .back-btn {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .back-btn:hover { text-decoration: underline; }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-top: 0.5rem;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 0.7rem 1.2rem;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            color: #718096;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .tab:hover:not(.active) {
+            background: white;
+            color: #667eea;
+        }
+        .content-area {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            min-height: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        /* Markdown 样式 */
+        .markdown {
+            font-size: 0.95rem;
+            color: #4a5568;
+            line-height: 1.85;
+        }
+        .markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+            margin: 1.75rem 0 0.85rem;
+            color: #2d3748;
+            font-weight: 600;
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            line-height: 1.35;
+        }
+        .markdown h1 { font-size: 1.55rem; border-bottom: 2px solid #edf2f7; padding-bottom: 0.5rem; }
+        .markdown h2 { font-size: 1.3rem; color: #667eea; padding-left: 0.85rem; border-left: 4px solid #667eea; background: linear-gradient(90deg, rgba(102,126,234,0.06), transparent); padding-top: 0.25rem; padding-bottom: 0.25rem; border-radius: 0 6px 6px 0; }
+        .markdown h3 { font-size: 1.1rem; color: #2d3748; }
+        .markdown p { margin: 0.95rem 0; color: #4a5568; line-height: 1.95; }
+        .markdown strong { color: #2d3748; font-weight: 600; }
+        .markdown em { color: #2d3748; font-style: italic; }
+        .markdown ul, .markdown ol { margin: 0.95rem 0 0.95rem 1.6rem; }
+        .markdown li { margin: 0.35rem 0; line-height: 1.85; }
+        .markdown li::marker { color: #667eea; }
+        .markdown blockquote { margin: 1.1rem 0; padding: 0.7rem 1rem; border-left: 4px solid #667eea; background: linear-gradient(90deg, rgba(102,126,234,0.07), transparent); border-radius: 0 8px 8px 0; }
+        .markdown hr { border: none; border-top: 1px dashed #cbd5e0; margin: 1.6rem 0; }
+        .markdown code {
+            background: #eef2ff;
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.85em;
+            color: #4c51bf;
+            word-break: break-word;
+            border: 1px solid #e0e7ff;
+        }
+        .markdown pre {
+            background: #282c34;
+            padding: 1.1rem 1.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 1.1rem 0;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            position: relative;
+        }
+        .markdown pre code {
+            background: none;
+            padding: 0;
+            color: #d7dae0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.9rem;
+            line-height: 1.7;
+            border: none;
+            word-break: normal;
+        }
+        .markdown .table-wrap { margin: 1rem 0; border-radius: 12px; border: 1px solid #e2e8f0; overflow-x: auto; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); }
+        .markdown table { width: 100%; border-collapse: collapse; margin: 0; min-width: 360px; }
+        .markdown th, .markdown td {
+            border: 1px solid #e2e8f0;
+            padding: 0.7rem 0.95rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        .markdown th { background: #f7fafc; font-weight: 600; color: #2d3748; white-space: nowrap; }
+        .markdown tr:nth-child(even) td { background: #fafbff; }
+        .markdown img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 1rem 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            cursor: zoom-in;
+        }
+        .markdown { font-size: 0.95rem; color: #4a5568; }
+        .markdown .katex { font-size: 1.08em; color: #1a202c; }
+        .markdown p:has(.katex-display) {
+            margin: 0;
+            padding: 0;
+        }
+        .markdown .katex-display {
+            margin: 1.5rem 0;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #fafbff 100%);
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.12);
+            overflow-x: auto;
+            overflow-y: hidden;
+            text-align: center;
+        }
+        .markdown .katex-display > .katex { white-space: normal; }
+        .markdown .katex-display .katex-html { display: block; }
+        .code-block-wrap { position: relative; margin: 1rem 0; }
+        .code-block-wrap > pre { margin: 0; }
+        .code-copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background: rgba(255,255,255,0.08); color: #abb2bf; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 0.25rem 0.55rem; font-size: 0.72rem; cursor: pointer; opacity: 0; transition: opacity 0.2s; font-family: inherit; }
+        .code-block-wrap:hover .code-copy-btn, .code-copy-btn:focus { opacity: 1; }
+        .code-copy-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+        .code-copy-btn.copied { background: #48bb78; color: white; border-color: #48bb78; opacity: 1; }
+        .lightbox { position: fixed; inset: 0; background: rgba(15,20,35,0.92); display: none; align-items: center; justify-content: center; z-index: 9999; padding: 2rem; cursor: zoom-out; }
+        .lightbox.open { display: flex; }
+        .lightbox img { max-width: 96vw; max-height: 96vh; border-radius: 12px; box-shadow: 0 20px 80px rgba(0,0,0,0.6); cursor: zoom-out; }
+        /* 文件列表 */
+        .file-list {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-item:hover {
+            background: #edf2f7;
+            transform: translateX(4px);
+        }
+        .file-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 1.2rem;
+        }
+        .file-icon.py { background: linear-gradient(135deg, #306998, #ffd43b); color: white; }
+        .file-icon.md { background: linear-gradient(135deg, #083fa1, #5194f0); color: white; }
+        .file-icon.ipynb { background: linear-gradient(135deg, #f37726, #f9ab00); color: white; }
+        .file-icon.png { background: linear-gradient(135deg, #8b5cf6, #ec4899); color: white; }
+        .file-info { flex: 1; }
+        .file-name { font-weight: 600; color: #2d3748; }
+        .file-type { font-size: 0.8rem; color: #718096; }
+        /* 空状态 */
+        .empty {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-inner">
+            <a href="index.html" class="back-btn">← 返回首页</a>
+            <h1 id="task-title"></h1>
+        </div>
+    </div>
+    <div class="container">
+        <div class="tabs" id="tabs"></div>
+        <div class="content-area" id="content"></div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const taskPath = params.get('path');
+        const basePath = '../' + taskPath + '/';
+        let currentTab = 'readme';
+
+        fetch('data.json')
+            .then(r => r.json())
+            .then(data => {
+                let task = null;
+                for (const cat of data.categories) {
+                    task = cat.tasks.find(t => t.path.replace(/\\/g, '/') === taskPath);
+                    if (task) break;
+                }
+                if (!task) return;
+
+                document.getElementById('task-title').textContent = `${task.id} · ${task.name}`;
+
+                const tabs = document.getElementById('tabs');
+                const tabDefs = [
+                    { id: 'readme', label: '📄 README' },
+                    { id: 'files', label: '📂 代码文件' },
+                    { id: 'notes', label: '📝 学习笔记', show: task.has_notes }
+                ];
+
+                tabDefs.forEach(t => {
+                    if (t.show === false) return;
+                    const btn = document.createElement('button');
+                    btn.className = `tab ${currentTab === t.id ? 'active' : ''}`;
+                    btn.textContent = t.label;
+                    btn.onclick = () => switchTab(t.id, task);
+                    tabs.appendChild(btn);
+                });
+
+                loadReadme(task);
+            });
+
+        function switchTab(tabId, task) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab').forEach((b, i) => {
+                b.classList.toggle('active', i === ['readme', 'files', 'notes'].indexOf(tabId));
+            });
+            
+            if (tabId === 'readme') loadReadme(task);
+            else if (tabId === 'files') loadFiles(task);
+            else if (tabId === 'notes') loadNotes(task);
+        }
+
+        async function loadReadme(task) {
+            const content = document.getElementById('content');
+            try {
+                const text = await fetch(basePath + 'README.md').then(r => {
+                    if (!r.ok) throw new Error();
+                    return r.text();
+                });
+                content.innerHTML = '<div class="markdown">' + renderMarkdownWithMath(text) + '</div>';
+                enhanceMarkdown(content);
+                document.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            } catch {
+                content.innerHTML = '<div class="empty">📄 README.md 不存在<br><span style="font-size:0.85rem">完成任务后会自动显示在这里</span></div>';
+            }
+        }
+
+        async function loadFiles(task) {
+            const content = document.getElementById('content');
+            if (task.files.length === 0) {
+                content.innerHTML = '<div class="empty">📂 暂无文件</div>';
+                return;
+            }
+            const html = task.files.map(f => {
+                const iconClass = f.type;
+                return `
+                    <div class="file-item" onclick="loadFileContent('${f.name}')">
+                        <div class="file-icon ${iconClass}">${getFileIcon(f.type)}</div>
+                        <div class="file-info">
+                            <div class="file-name">${f.name}</div>
+                            <div class="file-type">${f.type.toUpperCase()} · ${formatSize(f.size)}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            content.innerHTML = '<div class="file-list">' + html + '</div>';
+        }
+
+        async function loadFileContent(filename) {
+            const content = document.getElementById('content');
+            const text = await fetch(basePath + filename).then(r => r.text());
+
+            if (filename.endsWith('.md')) {
+                content.innerHTML = `
+                    <p style="margin-bottom:1rem;color:#718096"><a href="#" onclick="location.reload()" style="color:#667eea">← 返回文件列表</a> · ${filename}</p>
+                    <div class="markdown">${renderMarkdownWithMath(text)}</div>
+                `;
+                enhanceMarkdown(content);
+                content.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            } else if (filename.endsWith('.py')) {
+                content.innerHTML = `
+                    <p style="margin-bottom:1rem;color:#718096"><a href="#" onclick="location.reload()" style="color:#667eea">← 返回文件列表</a> · ${filename}</p>
+                    <pre><code class="language-python">${escapeHtml(text)}</code></pre>
+                `;
+                hljs.highlightAll();
+            } else {
+                content.innerHTML = `
+                    <p style="margin-bottom:1rem;color:#718096"><a href="#" onclick="location.reload()" style="color:#667eea">← 返回文件列表</a> · ${filename}</p>
+                    <pre style="font-family:monospace;font-size:0.85rem">${escapeHtml(text)}</pre>
+                `;
+            }
+        }
+
+        async function loadNotes(task) {
+            const content = document.getElementById('content');
+            try {
+                const files = task.files.filter(f => f.name.includes('学习文档') && f.name.endsWith('.md'));
+                if (files.length === 0) throw new Error();
+                
+                const text = await fetch(basePath + files[0].name).then(r => r.text());
+                content.innerHTML = '<div class="markdown">' + renderMarkdownWithMath(text) + '</div>';
+                enhanceMarkdown(content);
+                document.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block));
+            } catch {
+                content.innerHTML = '<div class="empty">📝 暂无学习笔记</div>';
+            }
+        }
+
+        function getFileIcon(type) {
+            const icons = { py: '🐍', md: '📝', ipynb: '📓', png: '🖼️', txt: '📄' };
+            return icons[type] || '📄';
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============ MARKDOWN RENDERER WITH MATH ============
+        function renderMarkdownWithMath(mdText) {
+            if (!mdText) return '';
+            const codeBlocks = [];
+            let protected = mdText.replace(/(```[\s\S]*?```)/g, (match) => {
+                const id = codeBlocks.length;
+                codeBlocks.push(match);
+                return `__CODEBLOCK_${id}__`;
+            });
+            const inlineCodes = [];
+            protected = protected.replace(/(`[^`\n]+`)/g, (match) => {
+                const id = inlineCodes.length;
+                inlineCodes.push(match);
+                return `__INLINECODE_${id}__`;
+            });
+            const displayMaths = [];
+            protected = protected.replace(/\$\$([\s\S]*?)\$\$/g, (match, tex) => {
+                const id = displayMaths.length;
+                displayMaths.push(tex.trim());
+                return `<span class="math-disp" data-id="${id}"></span>`;
+            });
+            protected = protected.replace(/\\\[([\s\S]*?)\\\]/g, (match, tex) => {
+                const id = displayMaths.length;
+                displayMaths.push(tex.trim());
+                return `<span class="math-disp" data-id="${id}"></span>`;
+            });
+            const inlineMaths = [];
+            protected = protected.replace(/\\\(([\s\S]*?)\\\)/g, (match, tex) => {
+                const id = inlineMaths.length;
+                inlineMaths.push(tex.trim());
+                return `<span class="math-inline" data-id="${id}"></span>`;
+            });
+            protected = protected.replace(/(?<!\$)\$([^\$\n]+?)\$(?!\$)/g, (match, tex) => {
+                const id = inlineMaths.length;
+                inlineMaths.push(tex.trim());
+                return `<span class="math-inline" data-id="${id}"></span>`;
+            });
+            protected = protected.replace(/__INLINECODE_(\d+)__/g, (match, id) => inlineCodes[parseInt(id)]);
+            protected = protected.replace(/__CODEBLOCK_(\d+)__/g, (match, id) => codeBlocks[parseInt(id)]);
+            let html = marked.parse(protected);
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            temp.querySelectorAll('.math-disp').forEach(span => {
+                const id = parseInt(span.dataset.id);
+                const tex = displayMaths[id];
+                if (!tex) return;
+                try {
+                    const katexHtml = katex.renderToString(tex, { throwOnError: false, displayMode: true });
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = katexHtml;
+                    const el = wrapper.firstElementChild;
+                    const parent = span.parentElement;
+                    if (parent && parent.tagName === 'P' && parent.childNodes.length === 1) {
+                        parent.replaceWith(el);
+                    } else {
+                        span.replaceWith(el);
+                    }
+                } catch (e) {
+                    span.textContent = '$$' + tex + '$$';
+                }
+            });
+            temp.querySelectorAll('.math-inline').forEach(span => {
+                const id = parseInt(span.dataset.id);
+                const tex = inlineMaths[id];
+                if (!tex) return;
+                try {
+                    const katexHtml = katex.renderToString(tex, { throwOnError: false, displayMode: false });
+                    const wrapper = document.createElement('span');
+                    wrapper.innerHTML = katexHtml;
+                    span.replaceWith(wrapper.firstElementChild);
+                } catch (e) {
+                    span.textContent = '$' + tex + '$';
+                }
+            });
+            return temp.innerHTML;
+        }
+
+        // ============ MARKDOWN ENHANCEMENTS ============
+        function enhanceMarkdown(scope) {
+            if (!scope) return;
+            scope.querySelectorAll('table').forEach(t => {
+                if (t.parentElement && t.parentElement.classList.contains('table-wrap')) return;
+                const wrap = document.createElement('div');
+                wrap.className = 'table-wrap';
+                t.parentNode.insertBefore(wrap, t);
+                wrap.appendChild(t);
+            });
+            scope.querySelectorAll('pre > code').forEach(codeEl => {
+                const pre = codeEl.parentElement;
+                if (!pre || pre.parentElement && pre.parentElement.classList.contains('code-block-wrap')) return;
+                const wrap = document.createElement('div');
+                wrap.className = 'code-block-wrap';
+                pre.parentNode.insertBefore(wrap, pre);
+                wrap.appendChild(pre);
+                const btn = document.createElement('button');
+                btn.className = 'code-copy-btn';
+                btn.type = 'button';
+                btn.textContent = '复制';
+                btn.addEventListener('click', () => {
+                    const text = codeEl.innerText;
+                    const done = () => { btn.classList.add('copied'); btn.textContent = '已复制'; setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '复制'; }, 1600); };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(done).catch(() => {});
+                    } else {
+                        try {
+                            const ta = document.createElement('textarea');
+                            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                            document.body.appendChild(ta); ta.select();
+                            document.execCommand('copy'); document.body.removeChild(ta);
+                            done();
+                        } catch (e) {}
+                    }
+                });
+                wrap.appendChild(btn);
+            });
+            scope.querySelectorAll('img').forEach(img => img.addEventListener('click', () => openLightbox(img.src, img.alt)));
+            // Math rendering is now handled by renderMarkdownWithMath() before marked.parse
+        }
+
+        let _lightbox = null;
+        function openLightbox(src, alt) {
+            if (!_lightbox) {
+                _lightbox = document.createElement('div');
+                _lightbox.className = 'lightbox';
+                _lightbox.innerHTML = '<img alt="" />';
+                _lightbox.addEventListener('click', () => _lightbox.classList.remove('open'));
+                document.body.appendChild(_lightbox);
+                document.addEventListener('keydown', e => { if (e.key === 'Escape' && _lightbox) _lightbox.classList.remove('open'); });
+            }
+            const img = _lightbox.querySelector('img');
+            img.src = src; img.alt = alt || '';
+            _lightbox.classList.add('open');
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+

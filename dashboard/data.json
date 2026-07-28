@@ -1,0 +1,1369 @@
+{
+  "categories": [
+    {
+      "id": "01",
+      "name": "AI哲学与总论",
+      "expected_count": 3,
+      "actual_count": 3,
+      "tasks": [
+        {
+          "id": "T001",
+          "name": "图灵测试",
+          "en": "TuringTest",
+          "path": "01-AI哲学与总论(3)/T001-图灵测试-TuringTest",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T111",
+          "name": "逻辑规则系统",
+          "en": "LogicRuleSystems",
+          "path": "01-AI哲学与总论(3)/T111-逻辑规则系统-LogicRuleSystems",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T112",
+          "name": "专家系统",
+          "en": "ExpertSystems",
+          "path": "01-AI哲学与总论(3)/T112-专家系统-ExpertSystems",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "name": "传统机器学习",
+      "expected_count": 13,
+      "actual_count": 13,
+      "tasks": [
+        {
+          "id": "T002",
+          "name": "感知机",
+          "en": "Perceptron",
+          "path": "02-传统机器学习(13)/T002-感知机-Perceptron",
+          "files": [
+            {
+              "name": "perceptron.py",
+              "type": "py",
+              "size": 2096,
+              "content": "\"\"\"T002 · Perceptron Learning Algorithm (PLA).\"\"\"\n\nfrom __future__ import annotations\n\nimport numpy as np\n\n\nclass Perceptron:\n    \"\"\"经典感知机（PLA）。标签约定为 {-1, +1}。\"\"\"\n\n    def __init__(self, lr: float = 1.0, max_epochs: int = 100):\n        self.lr = lr\n        self.max_epochs = max_epochs\n        self.w: np.ndarray | None = None\n        self.b: float = 0.0\n        self.errors_history: list[int] = []\n        self.n_updates: int = 0\n        self.n_epochs_ran: int = 0\n\n    def fit(self, X: np.ndarray, y: np.ndarray) -> \"Perceptron\":\n        X = np.asarray(X, dtype=float)\n        y = np.asarray(y, dtype=float)\n        if set(np.unique(y)) - {-1.0, 1.0}:\n            raise ValueError(\"标签必须为 {-1, +1}\")\n\n        n_samples, n_features = X.shape\n        self.w = np.zeros(n_features, dtype=float)\n        self.b = 0.0\n        self.errors_history = []\n        self.n_updates = 0\n\n        for epoch in range(self.max_epochs):\n            errors = 0\n            for xi, yi in zip(X, y):\n                pred = np.sign(np.dot(xi, self.w) + self.b)\n                if pred == 0:\n                    pred = -1.0\n                if pred != yi:\n                    update = self.lr * yi\n                    self.w += update * xi\n                    self.b += update\n                    errors += 1\n                    self.n_updates += 1\n            self.errors_history.append(errors)\n            self.n_epochs_ran = epoch + 1\n            if errors == 0:\n                break\n        return self\n\n    def decision_function(self, X: np.ndarray) -> np.ndarray:\n        if self.w is None:\n            raise RuntimeError(\"模型尚未训练，请先调用 fit()\")\n        X = np.asarray(X, dtype=float)\n        return X @ self.w + self.b\n\n    def predict(self, X: np.ndarray) -> np.ndarray:\n        scores = self.decision_function(X)\n        preds = np.sign(scores)\n        preds[preds == 0] = -1.0\n        return preds\n\n    def score(self, X: np.ndarray, y: np.ndarray) -> float:\n        y = np.asarray(y, dtype=float)\n        return float((self.predict(X) == y).mean())\n"
+            },
+            {
+              "name": "README.md",
+              "type": "md",
+              "size": 3073,
+              "content": "# T002 · 感知机（Perceptron）\n\n> 状态：完成  \n> 层级：Toy  \n> 优先级：A-Core  \n> 分类：02-传统机器学习  \n> 路径：`02-传统机器学习(13)/T002-感知机-Perceptron/`\n\n---\n\n## 1. 问题定义\n\n**要解决什么问题？**  \n二维线性可分的二分类：给定特征 $x \\in \\mathbb{R}^2$ 与标签 $y \\in \\{-1,+1\\}$，学习超平面 $w \\cdot x + b = 0$，使训练样本被正确分开。\n\n**输入 / 输出 / 成功标准**\n\n| 项 | 说明 |\n|----|------|\n| 输入 | 2 维特征、±1 标签 |\n| 输出 | 权重 $w$、偏置 $b$、预测标签 |\n| 成功标准 | 线性可分 toy 数据上训练/测试准确率 = 100%，并画出决策边界与收敛曲线 |\n\n---\n\n## 2. 实验层级\n\n**Toy** · 合成线性可分数据 · 纯 CPU · 零 GPU 成本\n\n---\n\n## 3. 实现\n\n| 文件 | 作用 |\n|------|------|\n| `perceptron.py` | PLA 核心类：`fit` / `predict` / `score` |\n| `train.py` | 造数 → 训练 → 评估 → 出图 → 写 `results.json` |\n| `学习文档/` | 学习笔记（md + ipynb） |\n| `figures/` | 决策边界、收敛曲线 |\n| `results.json` | 指标快照 |\n\n**算法**：Perceptron Learning Algorithm（PLA）\n\n$$\n\\hat{y} = \\mathrm{sign}(w \\cdot x + b)\n$$\n\n错分时更新：\n\n$$\nw \\leftarrow w + \\eta\\, y\\, x,\\quad b \\leftarrow b + \\eta\\, y\n$$\n\n**依赖**：`numpy`、`matplotlib`、`scikit-learn`（仅 `train_test_split`）\n\n**运行**：\n\n```bash\ncd 02-传统机器学习(13)/T002-感知机-Perceptron\npython train.py\n```\n\n---\n\n## 4. 数据\n\n- **来源**：合成两类高斯簇（均值约 $[2,2]$ 与 $[-2,-2]$，`scale=0.55`），保证线性可分  \n- **规模**：200 样本，train/test = 75% / 25%，`random_state=42`，分层划分  \n- **标签约定**：`{-1, +1}`（不是 `{0,1}`）\n\n---\n\n## 5. 结果\n\n| 指标 | 值 |\n|------|-----|\n| 训练准确率 | 100% |\n| 测试准确率 | 100% |\n| 实际 epoch | 2 |\n| 权重更新次数 | 1 |\n| 学习率 $\\eta$ | 1.0 |\n| 最终 $w$ | $\\approx [1.634,\\ 2.128]$ |\n| 最终 $b$ | $1.0$ |\n\n### 决策边界\n\n![决策边界](figures/decision_boundary.png)\n\n### 收敛曲线\n\n![收敛曲线](figures/convergence.png)\n\n线性可分时 PLA 很快收敛到 0 错分，与 Novikoff 定理的「有限次更新」结论一致。\n\n---\n\n## 6. 复盘\n\n**做对了什么**\n\n- 标签严格用 ±1，避免更新符号错误  \n- 数据主动保证可分，避免「永远不收敛」假失败  \n- `sign(0)` 统一映射为 -1，消除边界点歧义  \n\n**踩过的坑**\n\n- `sklearn.make_classification(class_sep=1.0)` **不保证**线性可分；初版 100 epoch 仍 ~85% 准确率  \n- 必须设 `max_epochs` 兜底，不可分时 PLA 不会停  \n\n**记住的三件事**\n\n1. 线性可分 → PLA 一定收敛  \n2. 感知机 ≈ 逻辑回归去掉 sigmoid（硬分类 vs 概率）  \n3. 多层感知机 = 感知机堆深度  \n\n---\n\n## 7. 下一步\n\n- 把 `sign` 换成 `sigmoid` → 逻辑回归（见 T117）  \n- 加隐藏层 → MLP  \n- 不可分数据可试 Pocket 算法  \n\n**完成判定**：代码可复现、指标达标、实验卡与图表齐全 → **完成**\n"
+            },
+            {
+              "name": "results.json",
+              "type": "json",
+              "size": 416,
+              "content": "{\n  \"n_samples\": 200,\n  \"train_size\": 150,\n  \"test_size\": 50,\n  \"lr\": 1.0,\n  \"max_epochs\": 100,\n  \"epochs_ran\": 2,\n  \"n_updates\": 1,\n  \"final_errors\": 0,\n  \"errors_history\": [\n    1,\n    0\n  ],\n  \"w\": [\n    1.6339696609912182,\n    2.127688727686696\n  ],\n  \"b\": 1.0,\n  \"train_acc\": 1.0,\n  \"test_acc\": 1.0,\n  \"figures\": [\n    \"figures/decision_boundary.png\",\n    \"figures/convergence.png\"\n  ]\n}"
+            },
+            {
+              "name": "train.py",
+              "type": "py",
+              "size": 4561,
+              "content": "\"\"\"T002 · 感知机训练入口：造数 → 训练 → 评估 → 画图。\"\"\"\n\nfrom __future__ import annotations\n\nimport json\nfrom pathlib import Path\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\n\nfrom perceptron import Perceptron\n\nROOT = Path(__file__).resolve().parent\nFIG_DIR = ROOT / \"figures\"\nRESULT_PATH = ROOT / \"results.json\"\n\nSEED = 42\nN_SAMPLES = 200\nTEST_SIZE = 0.25\nLR = 1.0\nMAX_EPOCHS = 100\n\n\ndef make_toy_data(n_samples: int = N_SAMPLES, seed: int = SEED):\n    \"\"\"生成二维线性可分数据（保证 PLA 可收敛）。\"\"\"\n    rng = np.random.default_rng(seed)\n    n_pos = n_samples // 2\n    n_neg = n_samples - n_pos\n    # 两类高斯簇，均值拉开，保证线性可分\n    X_pos = rng.normal(loc=[2.0, 2.0], scale=0.55, size=(n_pos, 2))\n    X_neg = rng.normal(loc=[-2.0, -2.0], scale=0.55, size=(n_neg, 2))\n    X = np.vstack([X_pos, X_neg])\n    y = np.array([1] * n_pos + [-1] * n_neg, dtype=float)\n    idx = rng.permutation(n_samples)\n    return X[idx], y[idx]\n\n\ndef plot_decision_boundary(model: Perceptron, X: np.ndarray, y: np.ndarray, path: Path):\n    x_min, x_max = X[:, 0].min() - 0.8, X[:, 0].max() + 0.8\n    y_min, y_max = X[:, 1].min() - 0.8, X[:, 1].max() + 0.8\n    xx, yy = np.meshgrid(\n        np.linspace(x_min, x_max, 400),\n        np.linspace(y_min, y_max, 400),\n    )\n    grid = np.c_[xx.ravel(), yy.ravel()]\n    zz = model.decision_function(grid).reshape(xx.shape)\n\n    fig, ax = plt.subplots(figsize=(7, 6))\n    ax.contourf(xx, yy, zz, levels=0, colors=[\"#fbb6ce\", \"#9ae6b4\"], alpha=0.35)\n    ax.contour(xx, yy, zz, levels=[0], colors=[\"#2d3748\"], linewidths=2)\n\n    ax.scatter(\n        X[y == 1, 0], X[y == 1, 1],\n        c=\"#38a169\", edgecolors=\"white\", s=55, label=\"+1\", zorder=3,\n    )\n    ax.scatter(\n        X[y == -1, 0], X[y == -1, 1],\n        c=\"#e53e3e\", edgecolors=\"white\", s=55, label=\"-1\", zorder=3,\n    )\n    ax.set_title(\"Perceptron Decision Boundary\")\n    ax.set_xlabel(\"x1\")\n    ax.set_ylabel(\"x2\")\n    ax.legend(loc=\"best\")\n    ax.set_aspect(\"equal\", adjustable=\"box\")\n    fig.tight_layout()\n    fig.savefig(path, dpi=150)\n    plt.close(fig)\n\n\ndef plot_convergence(errors_history: list[int], path: Path):\n    fig, ax = plt.subplots(figsize=(7, 4.5))\n    epochs = np.arange(1, len(errors_history) + 1)\n    ax.plot(epochs, errors_history, marker=\"o\", color=\"#667eea\", linewidth=2)\n    ax.fill_between(epochs, errors_history, alpha=0.15, color=\"#667eea\")\n    ax.set_title(\"Training Convergence (misclassifications per epoch)\")\n    ax.set_xlabel(\"Epoch\")\n    ax.set_ylabel(\"Errors\")\n    ax.set_ylim(bottom=0)\n    ax.grid(True, alpha=0.3)\n    fig.tight_layout()\n    fig.savefig(path, dpi=150)\n    plt.close(fig)\n\n\ndef main():\n    FIG_DIR.mkdir(exist_ok=True)\n\n    X, y = make_toy_data()\n    X_train, X_test, y_train, y_test = train_test_split(\n        X, y, test_size=TEST_SIZE, random_state=SEED, stratify=y\n    )\n\n    model = Perceptron(lr=LR, max_epochs=MAX_EPOCHS)\n    model.fit(X_train, y_train)\n\n    train_acc = model.score(X_train, y_train)\n    test_acc = model.score(X_test, y_test)\n\n    boundary_path = FIG_DIR / \"decision_boundary.png\"\n    conv_path = FIG_DIR / \"convergence.png\"\n    plot_decision_boundary(model, X, y, boundary_path)\n    plot_convergence(model.errors_history, conv_path)\n\n    results = {\n        \"n_samples\": int(N_SAMPLES),\n        \"train_size\": int(len(X_train)),\n        \"test_size\": int(len(X_test)),\n        \"lr\": LR,\n        \"max_epochs\": MAX_EPOCHS,\n        \"epochs_ran\": model.n_epochs_ran,\n        \"n_updates\": model.n_updates,\n        \"final_errors\": model.errors_history[-1] if model.errors_history else None,\n        \"errors_history\": model.errors_history,\n        \"w\": model.w.tolist() if model.w is not None else None,\n        \"b\": float(model.b),\n        \"train_acc\": train_acc,\n        \"test_acc\": test_acc,\n        \"figures\": [\n            str(boundary_path.relative_to(ROOT)).replace(\"\\\\\", \"/\"),\n            str(conv_path.relative_to(ROOT)).replace(\"\\\\\", \"/\"),\n        ],\n    }\n    RESULT_PATH.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding=\"utf-8\")\n\n    print(\"=== T002 Perceptron ===\")\n    print(f\"epochs_ran : {model.n_epochs_ran}\")\n    print(f\"n_updates  : {model.n_updates}\")\n    print(f\"w, b       : {model.w}, {model.b:.4f}\")\n    print(f\"train_acc  : {train_acc:.2%}\")\n    print(f\"test_acc   : {test_acc:.2%}\")\n    print(f\"figures    : {boundary_path.name}, {conv_path.name}\")\n    print(f\"results    : {RESULT_PATH.name}\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+            },
+            {
+              "name": "figures/convergence.png",
+              "type": "png",
+              "size": 42226,
+              "content": null
+            },
+            {
+              "name": "figures/decision_boundary.png",
+              "type": "png",
+              "size": 79189,
+              "content": null
+            },
+            {
+              "name": "学习文档/T002-感知机-学习笔记.ipynb",
+              "type": "ipynb",
+              "size": 7446,
+              "content": "{\n \"cells\": [\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"80f2c41d\",\n   \"metadata\": {},\n   \"source\": [\n    \"# T002 · 感知机（Perceptron）\\n\",\n    \"\\n\",\n    \"Colab 跑这份 notebook 即可。详细解释见同目录 `T002-感知机-学习笔记.md`。\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"fec54c62\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Step A · 生成 toy 数据\\n\",\n    \"\\n\",\n    \"两类高斯簇（均值拉开）保证线性可分；标签直接用 {-1,+1}。\\n\",\n    \"注意：`sklearn.make_classification(class_sep=1.0)` 不保证可分。\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"id\": \"79fd80c9\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"import numpy as np\\n\",\n    \"\\n\",\n    \"rng = np.random.default_rng(42)\\n\",\n    \"X_pos = rng.normal(loc=[2.0, 2.0], scale=0.55, size=(100, 2))\\n\",\n    \"X_neg = rng.normal(loc=[-2.0, -2.0], scale=0.55, size=(100, 2))\\n\",\n    \"X = np.vstack([X_pos, X_neg])\\n\",\n    \"y = np.array([1] * 100 + [-1] * 100, dtype=float)\\n\",\n    \"idx = rng.permutation(200)\\n\",\n    \"X, y = X[idx], y[idx]\\n\",\n    \"\\n\",\n    \"print(\\\"X shape:\\\", X.shape)            # (200, 2)\\n\",\n    \"print(\\\"y unique:\\\", set(y))            # {-1.0, 1.0}\\n\",\n    \"print(\\\"每类样本数:\\\", {c: int((y == c).sum()) for c in set(y)})\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"5f8fb914\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Step B · 感知机类（PLA 算法）\\n\",\n    \"\\n\",\n    \"`fit` 每轮遍历所有样本，逐个判断，错就把权重往正确方向推一步；全对就提前停。\\n\",\n    \"\\n\",\n    \"`predict` 输出 +1 或 -1。\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"id\": \"4254131e\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"class Perceptron:\\n\",\n    \"    \\\"\\\"\\\"Rosenblatt 1958 感知机，标准 PLA。标签约定 {-1,+1}。\\\"\\\"\\\"\\n\",\n    \"    def __init__(self, lr=1.0, max_epochs=100):\\n\",\n    \"        self.lr = lr\\n\",\n    \"        self.max_epochs = max_epochs\\n\",\n    \"\\n\",\n    \"    def fit(self, X, y):\\n\",\n    \"        n_samples, n_features = X.shape\\n\",\n    \"        self.w = np.zeros(n_features)\\n\",\n    \"        self.b = 0.0\\n\",\n    \"        self.errors_history = []\\n\",\n    \"\\n\",\n    \"        for epoch in range(self.max_epochs):\\n\",\n    \"            errors = 0\\n\",\n    \"            for xi, yi in zip(X, y):\\n\",\n    \"                pred = np.sign(np.dot(xi, self.w) + self.b)\\n\",\n    \"                if pred == 0:\\n\",\n    \"                    pred = -1.0\\n\",\n    \"                if pred != yi:\\n\",\n    \"                    self.w += self.lr * yi * xi\\n\",\n    \"                    self.b += self.lr * yi\\n\",\n    \"                    errors += 1\\n\",\n    \"            self.errors_history.append(errors)\\n\",\n    \"            if errors == 0:\\n\",\n    \"                break\\n\",\n    \"        return self\\n\",\n    \"\\n\",\n    \"    def predict(self, X):\\n\",\n    \"        preds = np.sign(X @ self.w + self.b)\\n\",\n    \"        preds[preds == 0] = -1.0\\n\",\n    \"        return preds\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"90cc326c\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Step C · 训练 + 评估\\n\",\n    \"\\n\",\n    \"7:3 划分训练/测试，stratify 保证分布一致。预期测试准确率 ≥ 95%（数据线性可分）。\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"id\": \"0d520842\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"from sklearn.model_selection import train_test_split\\n\",\n    \"\\n\",\n    \"X_train, X_test, y_train, y_test = train_test_split(\\n\",\n    \"    X, y, test_size=0.3, random_state=42, stratify=y\\n\",\n    \")\\n\",\n    \"\\n\",\n    \"model = Perceptron(lr=1.0, max_epochs=100)\\n\",\n    \"model.fit(X_train, y_train)\\n\",\n    \"\\n\",\n    \"train_acc = (model.predict(X_train) == y_train).mean()\\n\",\n    \"test_acc  = (model.predict(X_test)  == y_test).mean()\\n\",\n    \"\\n\",\n    \"print(f\\\"训练准确率：{train_acc:.2%}\\\")\\n\",\n    \"print(f\\\"测试准确率：{test_acc:.2%}\\\")\\n\",\n    \"print(f\\\"收敛轮数：  {len(model.errors_history)}\\\")\\n\",\n    \"print(f\\\"最终权重：  w = {model.w}\\\")\\n\",\n    \"print(f\\\"最终偏置：  b = {model.b:.4f}\\\")\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"6daf2cdd\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Step D · 画决策边界\\n\",\n    \"\\n\",\n    \"两类点用不同颜色画散点，再画直线 $w \\\\cdot x + b = 0$，肉眼能直接看出模型切开了两堆。\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"id\": \"5f112dae\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"import matplotlib.pyplot as plt\\n\",\n    \"import os\\n\",\n    \"os.makedirs(\\\"figures\\\", exist_ok=True)\\n\",\n    \"\\n\",\n    \"plt.figure(figsize=(8, 6))\\n\",\n    \"plt.scatter(X[y == 1, 0],  X[y == 1, 1],  c=\\\"royalblue\\\", label=\\\"+1\\\", alpha=0.7)\\n\",\n    \"plt.scatter(X[y == -1, 0], X[y == -1, 1], c=\\\"tomato\\\",    label=\\\"-1\\\", alpha=0.7)\\n\",\n    \"\\n\",\n    \"# 决策直线 w·x + b = 0  →  x2 = -(w1·x1 + b) / w2\\n\",\n    \"x1_line = np.linspace(X[:, 0].min() - 1, X[:, 0].max() + 1, 100)\\n\",\n    \"x2_line = -(model.w[0] * x1_line + model.b) / model.w[1]\\n\",\n    \"plt.plot(x1_line, x2_line, \\\"k--\\\", lw=2, label=\\\"决策边界\\\")\\n\",\n    \"\\n\",\n    \"plt.xlabel(\\\"特征 1\\\")\\n\",\n    \"plt.ylabel(\\\"特征 2\\\")\\n\",\n    \"plt.title(f\\\"感知机决策边界  ·  测试准确率 {test_acc:.2%}\\\")\\n\",\n    \"plt.legend()\\n\",\n    \"plt.grid(alpha=0.3)\\n\",\n    \"plt.tight_layout()\\n\",\n    \"plt.savefig(\\\"figures/decision_boundary.png\\\", dpi=120)\\n\",\n    \"plt.show()\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"a771c7e3\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Step E · 画收敛曲线\\n\",\n    \"\\n\",\n    \"横轴 epoch，纵轴每轮错分样本数。线性可分时曲线应一路降到 0。\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"id\": \"e9817066\",\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"plt.figure(figsize=(8, 4))\\n\",\n    \"plt.plot(range(1, len(model.errors_history) + 1), model.errors_history, \\\"o-\\\")\\n\",\n    \"plt.xlabel(\\\"Epoch\\\")\\n\",\n    \"plt.ylabel(\\\"错分样本数\\\")\\n\",\n    \"plt.title(\\\"感知机训练收敛曲线\\\")\\n\",\n    \"plt.grid(alpha=0.3)\\n\",\n    \"plt.tight_layout()\\n\",\n    \"plt.savefig(\\\"figures/convergence.png\\\", dpi=120)\\n\",\n    \"plt.show()\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"id\": \"summary-cell\",\n   \"metadata\": {},\n   \"source\": [\n    \"## ✅ 做完这个实验你应该记住三件事\\n\",\n    \"\\n\",\n    \"| 序号 | 知识点 | 一句话总结 |\\n\",\n    \"|------|--------|-----------|\\n\",\n    \"| 1 | **Novikoff 定理** | 只要线性可分，PLA **一定收敛**，错分次数有上界 |\\n\",\n    \"| 2 | **感知机 vs 逻辑回归** | 前者硬分类（±1），后者软输出（概率），是近亲 |\\n\",\n    \"| 3 | **深度学习的起源** | 加隐藏层 + 激活函数 → MLP → 就是神经网络了 |\\n\",\n    \"\\n\",\n    \"💡 下一步：把 `sign` 换成 `sigmoid`，你就写出了逻辑回归！\"\n   ]\n  }\n ],\n \"metadata\": {\n  \"kernelspec\": {\n   \"display_name\": \"Python 3\",\n   \"language\": \"python\",\n   \"name\": \"python3\"\n  },\n  \"language_info\": {\n   \"name\": \"python\",\n   \"version\": \"3.10\"\n  }\n },\n \"nbformat\": 4,\n \"nbformat_minor\": 5\n}\n"
+            },
+            {
+              "name": "学习文档/T002-感知机-学习笔记.md",
+              "type": "md",
+              "size": 7372,
+              "content": "# T002 · 感知机（Perceptron）学习笔记\n\n> 二、传统机器学习 · A-Core · Toy 级别 · T4 预算 0h\n> 路径：`02-传统机器学习(13)/T002-感知机-Perceptron/`\n\n---\n\n## 1. 这个任务是什么？\n\n**感知机（Perceptron）** 是 1958 年心理学家 Frank Rosenblatt 提出的算法。它是神经网络的\"祖宗\"——你现在用的 ChatGPT、刷脸解锁、所有深度学习模型，本质上都是感知机的\"超级加强版\"。\n\n### 一句话解释\n\n感知机就是一个**会自己调参数的\"打分裁判\"**。你给它一堆样本（带特征 + 标签），它一开始瞎猜，猜错了就改改自己的判断标准，改着改着就学会了。\n\n### 一个生活比喻\n\n想象你是一个水果摊老板，要靠两个特征判断一个水果是**苹果🍎**还是**橘子🍊**：\n\n| 特征 | 苹果 | 橘子 |\n|------|------|------|\n| 颜色（红→橙） | 偏红 (0.8) | 偏橙 (0.2) |\n| 直径（cm） | 大 (0.9) | 小 (0.3) |\n\n感知机的\"判断公式\"就是：\n\n```\n分数 = 颜色权重 × 颜色 + 大小权重 × 大小 + 偏置\n如果 分数 > 0 → 苹果 (+1)\n否则 → 橘子 (-1)\n```\n\n权重一开始是随机的（瞎猜）。每次拿到一个水果：\n\n- **猜对了** → 不动（这组权重没毛病）\n- **猜错了** → 调权重（让\"苹果的特征\"权重变高一点，\"橘子的特征\"权重变低一点）\n\n几千个水果看完，权重就稳定了——这个水果摊老板**学会了**区分苹果和橘子。\n\n### 数学公式（一行就够了）\n\n$$\n\\hat{y} = \\text{sign}(w \\cdot x + b)\n$$\n\n各符号：\n\n- $x = (x_1, x_2, \\ldots, x_n)$：输入特征向量（比如 [颜色, 大小]）\n- $w = (w_1, w_2, \\ldots, w_n)$：权重，每个特征的重要性，是\"要学出来的东西\"\n- $b$：偏置，一个常量偏移\n- $\\text{sign}(z)$：符号函数，$z > 0$ 返回 +1，否则返回 -1\n- $\\hat{y}$：预测标签，+1 表示一类，-1 表示另一类\n\n**学习规则**：错一次就把 $w$ 往正确方向推一点点。\n\n**几何直觉**：$w \\cdot x + b = 0$ 就是 N 维空间里的一个**超平面**，感知机的目标就是找到这个平面把两类点完美切开。\n\n### 它能干什么、不能干什么\n\n| 能 | 不能 |\n|------|------|\n| **线性可分的二分类**（一条直线能分开苹果和橘子） | **异或（XOR）**——线性分不开的（Minsky 1969 证明了这一点，直接导致 AI 第一次寒冬） |\n| 训练极快、代码极简 | 处理复杂模式（图像、语言） |\n| 在线学习（来一个样本学一个） | 多分类（除非用一对多策略） |\n| 可解释（权重直接告诉你\"哪个特征更重要\"） | 输出概率（只能硬分类） |\n\n💡 **历史彩蛋**：Rosenblatt 当年吹得太狠（说感知机能\"看、说、自我复制\"），Minsky 啪啪打脸后 AI 经费砍了 10 年——这就是\"AI 寒冬\"的由来。\n\n我们这个 Toy 任务就是要在合成的\"线性可分\"数据上跑通它，感知机能完美学会（这是它的甜区），这样你就能直观感受到\"机器学习\"四个字到底在干嘛。\n\n---\n\n## 2. 我们要做什么？\n\n具体产出 4 件东西，都在 `02-传统机器学习(13)/T002-感知机-Perceptron/` 文件夹下：\n\n| 文件 | 内容 |\n|------|------|\n| `README.md` | 实验卡（问题定义 / 数据 / 模型 / 结果 / 对比，7 段填好） |\n| `perceptron.py` | 感知机核心实现（一个类 + 一个训练函数） |\n| `train.py` | 主程序：生成数据 → 训练 → 评估 → 画图 |\n| `figures/` | 2 张图：决策边界、训练收敛曲线 |\n\n跑完以后，进度跟踪表里 T002 → **完成**。\n\n---\n\n## 3. 具体怎么做？（Colab 友好版）\n\n下面是 `train.py` 的完整思路，全 CPU、零依赖（只用 numpy + matplotlib），Colab 默认就装好：\n\n### Step A：生成 toy 数据\n\n```python\nimport numpy as np\n\nrng = np.random.default_rng(42)\nX_pos = rng.normal(loc=[2.0, 2.0], scale=0.55, size=(100, 2))\nX_neg = rng.normal(loc=[-2.0, -2.0], scale=0.55, size=(100, 2))\nX = np.vstack([X_pos, X_neg])\ny = np.array([1] * 100 + [-1] * 100, dtype=float)  # 标签用 {-1,+1}\n```\n\n⚠️ **注意**：要用**真正线性可分**的数据。`sklearn.make_classification(class_sep=1.0)` 并不保证可分——实测可能卡在 ~85% 准确率。两类高斯簇拉开均值更稳妥。\n\n### Step B：感知机类（核心算法）\n\n```python\nimport numpy as np\n\nclass Perceptron:\n    def __init__(self, lr=1.0, max_epochs=100):\n        self.lr = lr\n        self.max_epochs = max_epochs\n\n    def fit(self, X, y):\n        n_samples, n_features = X.shape\n        self.w = np.zeros(n_features)  # 初始化为0（也可以用小随机数）\n        self.b = 0.0\n        self.errors_history = []\n\n        for epoch in range(self.max_epochs):\n            errors = 0\n            for xi, yi in zip(X, y):\n                pred = np.sign(np.dot(xi, self.w) + self.b)\n                if pred != yi:\n                    update = self.lr * yi\n                    self.w += update * xi\n                    self.b += update\n                    errors += 1\n            self.errors_history.append(errors)\n            if errors == 0:   # 全对就提前停\n                break\n        return self\n\n    def predict(self, X):\n        return np.sign(X @ self.w + self.b)\n```\n\n💡 **算法名字**：这叫 **PLA（Perceptron Learning Algorithm）**，是最经典的版本。还有 Pocket 算法（保存历史最优解）用来处理线性不可分的情况。\n\n### Step C：训练 + 评估\n\n```python\nmodel = Perceptron(lr=1.0, max_epochs=100)\nmodel.fit(X_train, y_train)\nacc = (model.predict(X_test) == y_test).mean()\nprint(f\"测试准确率：{acc:.2%}\")\n```\n\n⚠️ **常见坑**：\n1. 忘了把标签转成 ±1，用 0/1 的话更新公式就错了\n2. 学习率太大 → 震荡；太小 → 收敛慢\n3. 数据不可分 → 永远不会收敛（所以 max_epochs 必须有）\n\n### Step D：画图\n\n1. **决策边界图**：把数据散点画出来（+1 一类颜色，-1 一类颜色），再画一条直线 $w \\cdot x + b = 0$ 穿过中间，视觉上感知机把两堆点切开了\n2. **收敛曲线**：横轴 epoch，纵轴每轮错分样本数，应该看到曲线一路掉到 0（因为数据是线性可分的）\n\n---\n\n## 4. 你应该记住的三件事\n\n| 序号 | 知识点 | 为什么重要 |\n|------|--------|-----------|\n| 1 | **线性可分 → PLA 一定收敛** | 这是有数学证明的！Novikoff 定理说最多错 $\\frac{R^2}{\\gamma^2}$ 次 |\n| 2 | **感知机 ≈ 逻辑回归去掉 sigmoid** | 前者硬分类，后者软输出概率，这俩是近亲 |\n| 3 | **\"深度\"就是多层感知机堆起来** | 输入 → 隐藏层（加激活函数）→ 输出，就是神经网络了 |\n\n---\n\n## FAQ：你可能想问的\n\n**Q: 为什么权重初始化为 0 就行？别的算法不都要随机初始化吗？**\nA: 因为 PLA 是错一个样本就更新一次，只要数据可分，从哪开始都能走到解。神经网络就不行了（对称性问题）。\n\n**Q: 感知机现在还有人用吗？**\nA: 学术界基本没人用了，但它的**思想**无处不在——梯度下降、误差修正、在线学习，这些都是从 PLA 来的。\n\n**Q: 下一步学什么？**\nA: 把 `sign` 换成 `sigmoid` → **逻辑回归**；加隐藏层 → **MLP（多层感知机）**；这俩是感知机的直系后代。\n"
+            }
+          ],
+          "content": "# T002 · 感知机（Perceptron）\n\n> 状态：完成  \n> 层级：Toy  \n> 优先级：A-Core  \n> 分类：02-传统机器学习  \n> 路径：`02-传统机器学习(13)/T002-感知机-Perceptron/`\n\n---\n\n## 1. 问题定义\n\n**要解决什么问题？**  \n二维线性可分的二分类：给定特征 $x \\in \\mathbb{R}^2$ 与标签 $y \\in \\{-1,+1\\}$，学习超平面 $w \\cdot x + b = 0$，使训练样本被正确分开。\n\n**输入 / 输出 / 成功标准**\n\n| 项 | 说明 |\n|----|------|\n| 输入 | 2 维特征、±1 标签 |\n| 输出 | 权重 $w$、偏置 $b$、预测标签 |\n| 成功标准 | 线性可分 toy 数据上训练/测试准确率 = 100%，并画出决策边界与收敛曲线 |\n\n---\n\n## 2. 实验层级\n\n**Toy** · 合成线性可分数据 · 纯 CPU · 零 GPU 成本\n\n---\n\n## 3. 实现\n\n| 文件 | 作用 |\n|------|------|\n| `perceptron.py` | PLA 核心类：`fit` / `predict` / `score` |\n| `train.py` | 造数 → 训练 → 评估 → 出图 → 写 `results.json` |\n| `学习文档/` | 学习笔记（md + ipynb） |\n| `figures/` | 决策边界、收敛曲线 |\n| `results.json` | 指标快照 |\n\n**算法**：Perceptron Learning Algorithm（PLA）\n\n$$\n\\hat{y} = \\mathrm{sign}(w \\cdot x + b)\n$$\n\n错分时更新：\n\n$$\nw \\leftarrow w + \\eta\\, y\\, x,\\quad b \\leftarrow b + \\eta\\, y\n$$\n\n**依赖**：`numpy`、`matplotlib`、`scikit-learn`（仅 `train_test_split`）\n\n**运行**：\n\n```bash\ncd 02-传统机器学习(13)/T002-感知机-Perceptron\npython train.py\n```\n\n---\n\n## 4. 数据\n\n- **来源**：合成两类高斯簇（均值约 $[2,2]$ 与 $[-2,-2]$，`scale=0.55`），保证线性可分  \n- **规模**：200 样本，train/test = 75% / 25%，`random_state=42`，分层划分  \n- **标签约定**：`{-1, +1}`（不是 `{0,1}`）\n\n---\n\n## 5. 结果\n\n| 指标 | 值 |\n|------|-----|\n| 训练准确率 | 100% |\n| 测试准确率 | 100% |\n| 实际 epoch | 2 |\n| 权重更新次数 | 1 |\n| 学习率 $\\eta$ | 1.0 |\n| 最终 $w$ | $\\approx [1.634,\\ 2.128]$ |\n| 最终 $b$ | $1.0$ |\n\n### 决策边界\n\n![决策边界](figures/decision_boundary.png)\n\n### 收敛曲线\n\n![收敛曲线](figures/convergence.png)\n\n线性可分时 PLA 很快收敛到 0 错分，与 Novikoff 定理的「有限次更新」结论一致。\n\n---\n\n## 6. 复盘\n\n**做对了什么**\n\n- 标签严格用 ±1，避免更新符号错误  \n- 数据主动保证可分，避免「永远不收敛」假失败  \n- `sign(0)` 统一映射为 -1，消除边界点歧义  \n\n**踩过的坑**\n\n- `sklearn.make_classification(class_sep=1.0)` **不保证**线性可分；初版 100 epoch 仍 ~85% 准确率  \n- 必须设 `max_epochs` 兜底，不可分时 PLA 不会停  \n\n**记住的三件事**\n\n1. 线性可分 → PLA 一定收敛  \n2. 感知机 ≈ 逻辑回归去掉 sigmoid（硬分类 vs 概率）  \n3. 多层感知机 = 感知机堆深度  \n\n---\n\n## 7. 下一步\n\n- 把 `sign` 换成 `sigmoid` → 逻辑回归（见 T117）  \n- 加隐藏层 → MLP  \n- 不可分数据可试 Pocket 算法  \n\n**完成判定**：代码可复现、指标达标、实验卡与图表齐全 → **完成**\n",
+          "status": "完成",
+          "level": "Toy",
+          "has_notes": true,
+          "has_figures": true
+        },
+        {
+          "id": "T014",
+          "name": "决策树",
+          "en": "DecisionTree",
+          "path": "02-传统机器学习(13)/T014-决策树-DecisionTree",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T015",
+          "name": "k近邻",
+          "en": "kNN",
+          "path": "02-传统机器学习(13)/T015-k近邻-kNN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T016",
+          "name": "k均值聚类",
+          "en": "kmeans",
+          "path": "02-传统机器学习(13)/T016-k均值聚类-kmeans",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T017",
+          "name": "主成分分析",
+          "en": "PCA",
+          "path": "02-传统机器学习(13)/T017-主成分分析-PCA",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T018",
+          "name": "支持向量机",
+          "en": "SVM",
+          "path": "02-传统机器学习(13)/T018-支持向量机-SVM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T019",
+          "name": "随机森林",
+          "en": "RandomForest",
+          "path": "02-传统机器学习(13)/T019-随机森林-RandomForest",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T020",
+          "name": "自适应增强",
+          "en": "AdaBoost",
+          "path": "02-传统机器学习(13)/T020-自适应增强-AdaBoost",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T023",
+          "name": "自助汇聚法",
+          "en": "Bagging",
+          "path": "02-传统机器学习(13)/T023-自助汇聚法-Bagging",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T025",
+          "name": "梯度提升XGBoost",
+          "en": "GradientBoosting",
+          "path": "02-传统机器学习(13)/T025-梯度提升XGBoost-GradientBoosting",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T115",
+          "name": "自组织映射",
+          "en": "SOM",
+          "path": "02-传统机器学习(13)/T115-自组织映射-SOM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T117",
+          "name": "最大熵逻辑回归",
+          "en": "MaxentLogisticRegression",
+          "path": "02-传统机器学习(13)/T117-最大熵逻辑回归-MaxentLogisticRegression",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T118",
+          "name": "特征选择",
+          "en": "FeatureSelection",
+          "path": "02-传统机器学习(13)/T118-特征选择-FeatureSelection",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "name": "概率模型",
+      "expected_count": 5,
+      "actual_count": 5,
+      "tasks": [
+        {
+          "id": "T007",
+          "name": "期望最大化算法",
+          "en": "EMAlgorithm",
+          "path": "03-概率模型(5)/T007-期望最大化算法-EMAlgorithm",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T008",
+          "name": "隐马尔可夫模型",
+          "en": "HMM",
+          "path": "03-概率模型(5)/T008-隐马尔可夫模型-HMM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T009",
+          "name": "贝叶斯推断",
+          "en": "BayesianInference",
+          "path": "03-概率模型(5)/T009-贝叶斯推断-BayesianInference",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T024",
+          "name": "高斯混合模型",
+          "en": "GMM",
+          "path": "03-概率模型(5)/T024-高斯混合模型-GMM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T113",
+          "name": "贝叶斯网络",
+          "en": "BayesianNetworks",
+          "path": "03-概率模型(5)/T113-贝叶斯网络-BayesianNetworks",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "name": "搜索与早期控制",
+      "expected_count": 6,
+      "actual_count": 6,
+      "tasks": [
+        {
+          "id": "T004",
+          "name": "卡尔曼滤波",
+          "en": "KalmanFilter",
+          "path": "04-搜索与早期控制(6)/T004-卡尔曼滤波-KalmanFilter",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T005",
+          "name": "A星搜索",
+          "en": "AStar",
+          "path": "04-搜索与早期控制(6)/T005-A星搜索-AStar",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T061",
+          "name": "扩展卡尔曼滤波",
+          "en": "EKF",
+          "path": "04-搜索与早期控制(6)/T061-扩展卡尔曼滤波-EKF",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T062",
+          "name": "PID控制器",
+          "en": "",
+          "path": "04-搜索与早期控制(6)/T062-PID控制器",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T063",
+          "name": "模型预测控制",
+          "en": "MPC",
+          "path": "04-搜索与早期控制(6)/T063-模型预测控制-MPC",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T064",
+          "name": "快速随机探索树",
+          "en": "RRT",
+          "path": "04-搜索与早期控制(6)/T064-快速随机探索树-RRT",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "name": "深度学习基础",
+      "expected_count": 19,
+      "actual_count": 19,
+      "tasks": [
+        {
+          "id": "T003",
+          "name": "赫布学习",
+          "en": "HebbianLearning",
+          "path": "05-深度学习基础(19)/T003-赫布学习-HebbianLearning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T006",
+          "name": "感知机收敛",
+          "en": "PerceptronConvergence",
+          "path": "05-深度学习基础(19)/T006-感知机收敛-PerceptronConvergence",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T010",
+          "name": "反向传播",
+          "en": "Backpropagation",
+          "path": "05-深度学习基础(19)/T010-反向传播-Backpropagation",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T036",
+          "name": "随机失活",
+          "en": "Dropout",
+          "path": "05-深度学习基础(19)/T036-随机失活-Dropout",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T037",
+          "name": "批归一化",
+          "en": "BatchNorm",
+          "path": "05-深度学习基础(19)/T037-批归一化-BatchNorm",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T038",
+          "name": "Adam优化器",
+          "en": "",
+          "path": "05-深度学习基础(19)/T038-Adam优化器",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T090",
+          "name": "知识蒸馏",
+          "en": "KnowledgeDistillation",
+          "path": "05-深度学习基础(19)/T090-知识蒸馏-KnowledgeDistillation",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T091",
+          "name": "神经常微分方程",
+          "en": "NeuralODE",
+          "path": "05-深度学习基础(19)/T091-神经常微分方程-NeuralODE",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T092",
+          "name": "图神经网络",
+          "en": "GNN",
+          "path": "05-深度学习基础(19)/T092-图神经网络-GNN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T093",
+          "name": "对比学习",
+          "en": "ContrastiveLearning",
+          "path": "05-深度学习基础(19)/T093-对比学习-ContrastiveLearning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T116",
+          "name": "早期卷积神经网络",
+          "en": "CNNearly",
+          "path": "05-深度学习基础(19)/T116-早期卷积神经网络-CNNearly",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T119",
+          "name": "梯度裁剪",
+          "en": "GradientClipping",
+          "path": "05-深度学习基础(19)/T119-梯度裁剪-GradientClipping",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T120",
+          "name": "学习率调度",
+          "en": "LRSchedules",
+          "path": "05-深度学习基础(19)/T120-学习率调度-LRSchedules",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T122",
+          "name": "标签平滑",
+          "en": "LabelSmoothing",
+          "path": "05-深度学习基础(19)/T122-标签平滑-LabelSmoothing",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T126",
+          "name": "混合精度训练",
+          "en": "MixedPrecision",
+          "path": "05-深度学习基础(19)/T126-混合精度训练-MixedPrecision",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T127",
+          "name": "梯度检查点",
+          "en": "GradientCheckpointing",
+          "path": "05-深度学习基础(19)/T127-梯度检查点-GradientCheckpointing",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T128",
+          "name": "模型剪枝",
+          "en": "ModelPruning",
+          "path": "05-深度学习基础(19)/T128-模型剪枝-ModelPruning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T129",
+          "name": "INT8量化",
+          "en": "Quantization",
+          "path": "05-深度学习基础(19)/T129-INT8量化-Quantization",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T130",
+          "name": "持续学习",
+          "en": "ContinualLearning",
+          "path": "05-深度学习基础(19)/T130-持续学习-ContinualLearning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "name": "计算机视觉2D",
+      "expected_count": 23,
+      "actual_count": 23,
+      "tasks": [
+        {
+          "id": "T021",
+          "name": "LeNet5",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T021-LeNet5",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T026",
+          "name": "尺度不变特征变换",
+          "en": "SIFT",
+          "path": "06-计算机视觉2D(23)/T026-尺度不变特征变换-SIFT",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T027",
+          "name": "HOG特征SVM行人检测",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T027-HOG特征SVM行人检测",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T031",
+          "name": "ImageNet基准",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T031-ImageNet基准",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T032",
+          "name": "AlexNet",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T032-AlexNet",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T033",
+          "name": "VGGNet",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T033-VGGNet",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T034",
+          "name": "GoogLeNet",
+          "en": "Inception",
+          "path": "06-计算机视觉2D(23)/T034-GoogLeNet-Inception",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T035",
+          "name": "残差网络",
+          "en": "ResNet",
+          "path": "06-计算机视觉2D(23)/T035-残差网络-ResNet",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T043",
+          "name": "U",
+          "en": "Net分割网络",
+          "path": "06-计算机视觉2D(23)/T043-U-Net分割网络",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T044",
+          "name": "FasterR",
+          "en": "CNN",
+          "path": "06-计算机视觉2D(23)/T044-FasterR-CNN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T045",
+          "name": "YOLO单阶段检测",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T045-YOLO单阶段检测",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T046",
+          "name": "MaskR",
+          "en": "CNN实例分割",
+          "path": "06-计算机视觉2D(23)/T046-MaskR-CNN实例分割",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T050",
+          "name": "神经风格迁移",
+          "en": "StyleTransfer",
+          "path": "06-计算机视觉2D(23)/T050-神经风格迁移-StyleTransfer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T069",
+          "name": "视觉Transformer",
+          "en": "ViT",
+          "path": "06-计算机视觉2D(23)/T069-视觉Transformer-ViT",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T070",
+          "name": "SwinTransformer",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T070-SwinTransformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T071",
+          "name": "DETR检测Transformer",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T071-DETR检测Transformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T087",
+          "name": "分割一切模型",
+          "en": "SAM",
+          "path": "06-计算机视觉2D(23)/T087-分割一切模型-SAM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T087b",
+          "name": "SAM2视频分割",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T087b-SAM2视频分割",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T088",
+          "name": "SimCLR对比自监督",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T088-SimCLR对比自监督",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T089",
+          "name": "掩码自编码器",
+          "en": "MAE",
+          "path": "06-计算机视觉2D(23)/T089-掩码自编码器-MAE",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T106",
+          "name": "光流",
+          "en": "OpticalFlow",
+          "path": "06-计算机视觉2D(23)/T106-光流-OpticalFlow",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T107",
+          "name": "视频Transformer",
+          "en": "",
+          "path": "06-计算机视觉2D(23)/T107-视频Transformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T121",
+          "name": "Mixup",
+          "en": "CutMix数据增强",
+          "path": "06-计算机视觉2D(23)/T121-Mixup-CutMix数据增强",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "name": "几何3D视觉",
+      "expected_count": 6,
+      "actual_count": 6,
+      "tasks": [
+        {
+          "id": "T056",
+          "name": "PointNet点云分类",
+          "en": "",
+          "path": "07-几何3D视觉(6)/T056-PointNet点云分类",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T057",
+          "name": "深度符号距离函数",
+          "en": "DeepSDF",
+          "path": "07-几何3D视觉(6)/T057-深度符号距离函数-DeepSDF",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T058",
+          "name": "神经辐射场",
+          "en": "NeRF",
+          "path": "07-几何3D视觉(6)/T058-神经辐射场-NeRF",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T081",
+          "name": "3D高斯泼溅",
+          "en": "3DGS",
+          "path": "07-几何3D视觉(6)/T081-3D高斯泼溅-3DGS",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T104",
+          "name": "视觉SLAM",
+          "en": "",
+          "path": "07-几何3D视觉(6)/T104-视觉SLAM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T105",
+          "name": "单目深度估计",
+          "en": "MonocularDepth",
+          "path": "07-几何3D视觉(6)/T105-单目深度估计-MonocularDepth",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "name": "NLP基础",
+      "expected_count": 7,
+      "actual_count": 7,
+      "tasks": [
+        {
+          "id": "T022",
+          "name": "循环LSTM",
+          "en": "RNN-LSTM",
+          "path": "08-NLP基础(7)/T022-循环LSTM-RNN-LSTM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T028",
+          "name": "隐含狄利克雷分配",
+          "en": "LDA",
+          "path": "08-NLP基础(7)/T028-隐含狄利克雷分配-LDA",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T029",
+          "name": "条件随机场",
+          "en": "CRF",
+          "path": "08-NLP基础(7)/T029-条件随机场-CRF",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T039",
+          "name": "词向量",
+          "en": "Word2Vec",
+          "path": "08-NLP基础(7)/T039-词向量-Word2Vec",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T040",
+          "name": "GloVe全局词向量",
+          "en": "",
+          "path": "08-NLP基础(7)/T040-GloVe全局词向量",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T123",
+          "name": "余弦相似度检索",
+          "en": "",
+          "path": "08-NLP基础(7)/T123-余弦相似度检索",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T124",
+          "name": "BPE分词",
+          "en": "",
+          "path": "08-NLP基础(7)/T124-BPE分词",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "name": "Transformer与LLM",
+      "expected_count": 16,
+      "actual_count": 16,
+      "tasks": [
+        {
+          "id": "T041",
+          "name": "序列到序列",
+          "en": "Seq2Seq",
+          "path": "09-Transformer与LLM(16)/T041-序列到序列-Seq2Seq",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T042",
+          "name": "注意力机制",
+          "en": "Attention",
+          "path": "09-Transformer与LLM(16)/T042-注意力机制-Attention",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T065",
+          "name": "Transformer",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T065-Transformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T066",
+          "name": "BERT",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T066-BERT",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T067",
+          "name": "GPT2",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T067-GPT2",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T068",
+          "name": "T5",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T068-T5",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T075",
+          "name": "低秩适应",
+          "en": "LoRA",
+          "path": "09-Transformer与LLM(16)/T075-低秩适应-LoRA",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T076",
+          "name": "量化低秩适应",
+          "en": "QLoRA",
+          "path": "09-Transformer与LLM(16)/T076-量化低秩适应-QLoRA",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T077",
+          "name": "人类反馈强化学习",
+          "en": "RLHF",
+          "path": "09-Transformer与LLM(16)/T077-人类反馈强化学习-RLHF",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T078",
+          "name": "混合专家",
+          "en": "MoE",
+          "path": "09-Transformer与LLM(16)/T078-混合专家-MoE",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T079",
+          "name": "Mamba状态空间模型",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T079-Mamba状态空间模型",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T080",
+          "name": "检索增强生成",
+          "en": "RAG",
+          "path": "09-Transformer与LLM(16)/T080-检索增强生成-RAG",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T108",
+          "name": "多模态LLM",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T108-多模态LLM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T109",
+          "name": "工具调用LLM",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T109-工具调用LLM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T110",
+          "name": "检索式Transformer",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T110-检索式Transformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T125",
+          "name": "FlashAttention",
+          "en": "",
+          "path": "09-Transformer与LLM(16)/T125-FlashAttention",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "name": "生成模型",
+      "expected_count": 10,
+      "actual_count": 10,
+      "tasks": [
+        {
+          "id": "T011",
+          "name": "玻尔兹曼机",
+          "en": "BoltzmannMachine",
+          "path": "10-生成模型(10)/T011-玻尔兹曼机-BoltzmannMachine",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T030",
+          "name": "深度信念网络",
+          "en": "DBN",
+          "path": "10-生成模型(10)/T030-深度信念网络-DBN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T047",
+          "name": "变分自编码器",
+          "en": "VAE",
+          "path": "10-生成模型(10)/T047-变分自编码器-VAE",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T048",
+          "name": "生成对抗网络",
+          "en": "GAN",
+          "path": "10-生成模型(10)/T048-生成对抗网络-GAN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T049",
+          "name": "深度卷积GAN",
+          "en": "DCGAN",
+          "path": "10-生成模型(10)/T049-深度卷积GAN-DCGAN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T073",
+          "name": "去噪扩散概率模型",
+          "en": "DDPM",
+          "path": "10-生成模型(10)/T073-去噪扩散概率模型-DDPM",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T074",
+          "name": "StableDiffusion",
+          "en": "",
+          "path": "10-生成模型(10)/T074-StableDiffusion",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T095",
+          "name": "扩散Transformer",
+          "en": "DiT",
+          "path": "10-生成模型(10)/T095-扩散Transformer-DiT",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T096",
+          "name": "ControlNet可控扩散",
+          "en": "",
+          "path": "10-生成模型(10)/T096-ControlNet可控扩散",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T114",
+          "name": "Hopfield网络",
+          "en": "",
+          "path": "10-生成模型(10)/T114-Hopfield网络",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "name": "多模态",
+      "expected_count": 2,
+      "actual_count": 2,
+      "tasks": [
+        {
+          "id": "T072",
+          "name": "CLIP图文对齐",
+          "en": "",
+          "path": "11-多模态(2)/T072-CLIP图文对齐",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T094",
+          "name": "交叉注意力",
+          "en": "CrossAttention",
+          "path": "11-多模态(2)/T094-交叉注意力-CrossAttention",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "name": "强化学习",
+      "expected_count": 11,
+      "actual_count": 11,
+      "tasks": [
+        {
+          "id": "T012",
+          "name": "时序差分学习",
+          "en": "TDLearning",
+          "path": "12-强化学习(11)/T012-时序差分学习-TDLearning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T013",
+          "name": "Q学习",
+          "en": "Qlearning",
+          "path": "12-强化学习(11)/T013-Q学习-Qlearning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T051",
+          "name": "深度Q网络",
+          "en": "DQN",
+          "path": "12-强化学习(11)/T051-深度Q网络-DQN",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T052",
+          "name": "策略梯度",
+          "en": "REINFORCE",
+          "path": "12-强化学习(11)/T052-策略梯度-REINFORCE",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T053",
+          "name": "演员评论家",
+          "en": "A2C",
+          "path": "12-强化学习(11)/T053-演员评论家-A2C",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T054",
+          "name": "近端策略优化",
+          "en": "PPO",
+          "path": "12-强化学习(11)/T054-近端策略优化-PPO",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T055",
+          "name": "软演员评论家",
+          "en": "SAC",
+          "path": "12-强化学习(11)/T055-软演员评论家-SAC",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T097",
+          "name": "离线强化学习",
+          "en": "OfflineRL",
+          "path": "12-强化学习(11)/T097-离线强化学习-OfflineRL",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T098",
+          "name": "决策Transformer",
+          "en": "DecisionTransformer",
+          "path": "12-强化学习(11)/T098-决策Transformer-DecisionTransformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T099",
+          "name": "逆强化学习",
+          "en": "InverseRL",
+          "path": "12-强化学习(11)/T099-逆强化学习-InverseRL",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T100",
+          "name": "世界模型",
+          "en": "WorldModel",
+          "path": "12-强化学习(11)/T100-世界模型-WorldModel",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "name": "机器人基础",
+      "expected_count": 1,
+      "actual_count": 1,
+      "tasks": [
+        {
+          "id": "T103",
+          "name": "运动学逆解",
+          "en": "IKSolvers",
+          "path": "13-机器人基础(1)/T103-运动学逆解-IKSolvers",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "name": "机器人学习",
+      "expected_count": 9,
+      "actual_count": 9,
+      "tasks": [
+        {
+          "id": "T059",
+          "name": "行为克隆",
+          "en": "BehaviorCloning",
+          "path": "14-机器人学习(9)/T059-行为克隆-BehaviorCloning",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T060",
+          "name": "数据集聚合",
+          "en": "DAgger",
+          "path": "14-机器人学习(9)/T060-数据集聚合-DAgger",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T082",
+          "name": "扩散策略",
+          "en": "DiffusionPolicy",
+          "path": "14-机器人学习(9)/T082-扩散策略-DiffusionPolicy",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T083",
+          "name": "ACT",
+          "en": "ALOHA模仿学习",
+          "path": "14-机器人学习(9)/T083-ACT-ALOHA模仿学习",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T084",
+          "name": "RT1机器人Transformer",
+          "en": "",
+          "path": "14-机器人学习(9)/T084-RT1机器人Transformer",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T085",
+          "name": "RT2",
+          "en": "",
+          "path": "14-机器人学习(9)/T085-RT2",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T086",
+          "name": "Octo开源机器人基础模型",
+          "en": "",
+          "path": "14-机器人学习(9)/T086-Octo开源机器人基础模型",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T101",
+          "name": "仿真到真实迁移",
+          "en": "SimToReal",
+          "path": "14-机器人学习(9)/T101-仿真到真实迁移-SimToReal",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        },
+        {
+          "id": "T102",
+          "name": "学习式运动规划",
+          "en": "",
+          "path": "14-机器人学习(9)/T102-学习式运动规划",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "name": "Capstone",
+      "expected_count": 1,
+      "actual_count": 1,
+      "tasks": [
+        {
+          "id": "CAP01",
+          "name": "Capstone",
+          "en": "3D机器人学习",
+          "path": "15-Capstone(1)/CAP01-Capstone-3D机器人学习",
+          "files": [],
+          "has_notes": false,
+          "has_figures": false
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "total": 132,
+    "completed": 1,
+    "progress": 0.8
+  }
+}
